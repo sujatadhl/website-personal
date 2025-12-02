@@ -3,8 +3,9 @@ import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { blogs } from "@/lib/blog-data"
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  const blog = blogs.find((b) => b.slug === params.slug)
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const blog = blogs.find((b) => b.slug === slug)
 
   if (!blog) {
     return (
