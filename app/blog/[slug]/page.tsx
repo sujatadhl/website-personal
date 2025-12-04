@@ -50,37 +50,119 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
 
           {/* Content */}
           <div className="prose prose-invert max-w-none">
-            {blog.content.split("\n").map((paragraph, index) => {
-              if (paragraph.startsWith("##")) {
-                return (
-                  <h2 key={index} className="text-2xl font-bold mt-8 mb-4 text-accent">
-                    {paragraph.replace("## ", "")}
-                  </h2>
+            {
+              // Custom simple parser: support headings (##), fenced code blocks (```lang),
+              // grouped lists (- item), and paragraphs. This keeps blog text inline in JS simple.
+            }
+            {(() => {
+              const lines = blog.content.split("\n")
+              const nodes: React.ReactNode[] = []
+              let i = 0
+              let keyIndex = 0
+
+              while (i < lines.length) {
+                const line = lines[i]
+
+                // Fenced code block: ```lang
+                if (line.trim().startsWith("```)")) {
+                  // fallback if someone wrote three backticks but parser misreads spacing
+                }
+
+                if (line.startsWith("```")) {
+                  const info = line.slice(3).trim() // language info (e.g., hcl)
+                  const codeLines: string[] = []
+                  i++
+                  while (i < lines.length && !lines[i].startsWith("```")) {
+                    codeLines.push(lines[i])
+                    i++
+                  }
+                  // skip closing fence if present
+                  if (i < lines.length && lines[i].startsWith("```")) i++
+
+                  nodes.push(
+                    <pre key={"code-" + keyIndex} className="bg-card border border-border rounded-lg p-4 mb-4 overflow-x-auto">
+                      <code className="text-accent font-mono text-sm">{codeLines.join("\n")}</code>
+                    </pre>
+                  )
+                  keyIndex++
+                  continue
+                }
+
+                // Headings
+                if (line.startsWith("##")) {
+                  nodes.push(
+                    <h2 key={"h2-" + keyIndex} className="text-2xl font-bold mt-8 mb-4 text-accent">
+                      {line.replace("## ", "")}
+                    </h2>
+                  )
+                  keyIndex++
+                  i++
+                  continue
+                }
+
+                // Grouped list: consecutive lines starting with '- '
+                if (line.startsWith("- ")) {
+                  const items: React.ReactNode[] = []
+                  while (i < lines.length && lines[i].startsWith("- ")) {
+                    items.push(
+                      <li key={"li-" + keyIndex} className="ml-6 mb-2 text-muted-foreground">
+                        {lines[i].slice(2)}
+                      </li>
+                    )
+                    keyIndex++
+                    i++
+                  }
+                  nodes.push(
+                    <ul key={"ul-" + keyIndex} className="mb-4 list-disc list-inside">
+                      {items}
+                    </ul>
+                  )
+                  keyIndex++
+                  continue
+                }
+
+                // Blank line -> spacing
+                if (line.trim() === "") {
+                  nodes.push(<div key={"spacer-" + keyIndex} className="h-4" />)
+                  keyIndex++
+                  i++
+                  continue
+                }
+
+                // Image line: support a simple `image: path/to/img.jpg` (quotes optional)
+                // Example in content: image: /images/my-photo.jpg
+                const imageMatch = line.match(/^\s*"?'?image:\s*(.+?)"?'?\s*$/i)
+                if (imageMatch) {
+                  let src = imageMatch[1].trim()
+                  // If user provided a bare filename like image.jpg, assume /images/
+                  if (!src.startsWith("/") && !src.startsWith("http")) {
+                    src = "/images/" + src
+                  }
+
+                  const alt = src.split("/").pop() || "image"
+                  nodes.push(
+                    <div key={"img-" + keyIndex} className="my-6 flex justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={alt} className="max-w-full rounded-lg border border-border" />
+                    </div>
+                  )
+                  keyIndex++
+                  i++
+                  continue
+                }
+
+                // Default paragraph
+                nodes.push(
+                  <p key={"p-" + keyIndex} className="text-muted-foreground mb-4 leading-relaxed">
+                    {line}
+                  </p>
                 )
+                keyIndex++
+                i++
               }
-              if (paragraph.startsWith("-")) {
-                return (
-                  <li key={index} className="ml-6 mb-2 text-muted-foreground">
-                    {paragraph.replace("- ", "")}
-                  </li>
-                )
-              }
-              if (paragraph.startsWith("`")) {
-                return (
-                  <pre key={index} className="bg-card border border-border rounded-lg p-4 mb-4 overflow-x-auto">
-                    <code className="text-accent font-mono text-sm">{paragraph}</code>
-                  </pre>
-                )
-              }
-              if (paragraph.trim() === "") {
-                return <div key={index} className="h-4" />
-              }
-              return (
-                <p key={index} className="text-muted-foreground mb-4 leading-relaxed">
-                  {paragraph}
-                </p>
-              )
-            })}
+
+              return nodes
+            })()}
           </div>
 
           {/* Footer */}

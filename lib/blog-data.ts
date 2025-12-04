@@ -66,10 +66,10 @@ Kubernetes automates many of the manual processes involved in deploying, managin
 
 ## Core Components
 
-- **Pods**: Smallest deployable units in Kubernetes
-- **Deployments**: Manage replica sets of pods
-- **Services**: Expose pods to network traffic
-- **Ingress**: Manage external access to services
+- Pods: Smallest deployable units in Kubernetes
+- Deployments: Manage replica sets of pods
+- Services: Expose pods to network traffic
+- Ingress: Manage external access to services
 
 ## Deployment Example
 
@@ -143,21 +143,18 @@ Terraform makes infrastructure management predictable and scalable.`,
     content: `In the world of DevOps, consistency is king. Manually configuring servers, installing dependencies, and setting up reverse proxies is not only tedious but prone to human error. This is where Ansible shines.
 
 In this guide, we will walk through how to deploy a Node.js application behind an Nginx reverse proxy on an AWS EC2 instance. We will utilize Ansible Roles to keep our code modular and AWS Dynamic Inventory to automatically target our instances.
-
 ## What are Ansible Roles?
 
 Before diving into the code, let's understand the structure we are using. In Ansible, Roles are a way to organize and package related tasks, handlers, variables, and files into a reusable unit. They provide a structured approach for creating modular and shareable content.
 
 A typical role contains:
-- **Tasks**: A set of actions to be executed on the target hosts.
-- **Handlers**: Actions triggered by specific events (e.g., restarting a service after a config change).
-- **Templates**: Jinja2 templates used to dynamically generate configuration files.
-
+- Tasks: A set of actions to be executed on the target hosts.
+- Handlers: Actions triggered by specific events (e.g., restarting a service after a config change).
+- Templates: Jinja2 templates used to dynamically generate configuration files.
 ## Step 1: Project Setup and Inventory Configuration
 
 First, we need to organize our directory structure. We will create two roles: nginx and nodejs.
-
-### The Playbook
+## The Playbook
 
 Create a file named \`playbook.yml\`. This file acts as the entry point that maps your hosts to the roles they should execute.
 
@@ -172,35 +169,35 @@ Create a file named \`playbook.yml\`. This file acts as the entry point that map
   vars:
     ansible_connection: aws_ssm
     ansible_aws_ssm_region: us-east-1
-    ansible_aws_ssm_bucket_name: sujata-static-website-one
+    ansible_aws_ssm_bucket_name: <s3-bucket-name>
 \`\`\`
 
 Note: We are using aws_ssm for the connection, which requires the AWS SSM agent to be installed and proper IAM roles attached to your EC2 instance.
 
-### Dynamic Inventory
+## Dynamic Inventory
 
 Instead of manually typing IP addresses, we will use the AWS EC2 plugin to find our instances based on tags. Create a file named \`aws_ec2.yml\`.
 
 \`\`\`yaml
+---
 plugin: aws_ec2
 regions:
   - us-east-1
 hostnames: 
   - instance-id
 groups:
-  nginx: "'ansible-nginx-server-suj' in tags.Name"
+  nginx: "'<group>' in tags.Name"
 filters:
-   tag:Name: ansible-nginx-server-suj
-   tag:owner: sujata.dahal
+   tag:Name: <name-tag-value>
+   tag:owner: <owner-tag-value>
 \`\`\`
 
-This configuration tells Ansible to look for instances in us-east-1 with the specific tag Name: ansible-nginx-server-suj.
-
+This configuration tells Ansible to look for instances in us-east-1 with the specific tag Name: <name-tag-value>.
 ## Step 2: Configuring the Nginx Role
 
 We need Nginx to act as a reverse proxy, forwarding traffic from port 80 to our Node.js application running on port 3000.
-
-### Nginx Tasks
+## Nginx Tasks
+image: /4d70f07d-5baf-4b8a-8418-a9b35ae2c4a4.png 
 
 Create \`roles/nginx/tasks/main.yml\`:
 
@@ -232,12 +229,10 @@ server {
     }
 }
 \`\`\`
-
 ## Step 3: Configuring the Node.js Role
 
 Next, we define the tasks to install Node.js, pull our application code, and start it.
-
-### Node.js Tasks
+## Node.js Tasks
 
 Create \`roles/nodejs/tasks/main.yml\`:
 
@@ -268,8 +263,7 @@ Create \`roles/nodejs/tasks/main.yml\`:
     chdir: /home/ubuntu/app/
   notify: Restart nginx
 \`\`\`
-
-### Handlers
+## Handlers
 
 We noticed a \`notify: Restart nginx\` in the task above. We need to define this handler so Nginx restarts whenever the application state changes.
 
@@ -281,7 +275,6 @@ Create \`roles/nodejs/handlers/main.yml\`:
     name: nginx
     state: restarted
 \`\`\`
-
 ## Step 4: Execution
 
 With our playbook, inventory, and roles set up, we are ready to deploy. Open your terminal and run the following command:
@@ -297,9 +290,9 @@ Ansible will connect to your EC2 instance via AWS Systems Manager (SSM), install
 Once the playbook finishes successfully, copy the Public IP or Public DNS of your EC2 instance and paste it into your browser:
 
 \`http://<public_hostname_of_EC2_Instance>\`
+image: /293323d0-f715-4c07-acc4-b9fd9c58c5eb.png
 
 You should see your Node.js application running successfully behind Nginx!
-
 ## Conclusion
 
 By using Ansible Roles, we have created a modular deployment strategy. If we need to change how Nginx is configured, we only touch the nginx role. If the application logic changes, we update the nodejs role. This approach scales much better than writing a single massive playbook file.
