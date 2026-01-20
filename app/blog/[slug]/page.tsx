@@ -2,6 +2,7 @@ import Link from "next/link"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { blogs } from "@/lib/blog-data"
+import ReactMarkdown from "react-markdown"
 
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -50,37 +51,52 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
 
           {/* Content */}
           <div className="prose prose-invert max-w-none">
-            {blog.content.split("\n").map((paragraph, index) => {
-              if (paragraph.startsWith("##")) {
-                return (
-                  <h2 key={index} className="text-2xl font-bold mt-8 mb-4 text-accent">
-                    {paragraph.replace("## ", "")}
-                  </h2>
-                )
-              }
-              if (paragraph.startsWith("-")) {
-                return (
-                  <li key={index} className="ml-6 mb-2 text-muted-foreground">
-                    {paragraph.replace("- ", "")}
-                  </li>
-                )
-              }
-              if (paragraph.startsWith("`")) {
-                return (
-                  <pre key={index} className="bg-card border border-border rounded-lg p-4 mb-4 overflow-x-auto">
-                    <code className="text-accent font-mono text-sm">{paragraph}</code>
-                  </pre>
-                )
-              }
-              if (paragraph.trim() === "") {
-                return <div key={index} className="h-4" />
-              }
-              return (
-                <p key={index} className="text-muted-foreground mb-4 leading-relaxed">
-                  {paragraph}
-                </p>
-              )
-            })}
+            <div className="space-y-4">
+              <ReactMarkdown
+                components={{
+                  h2: ({ children }) => (
+                    <h2 className="text-2xl font-bold mt-8 mb-4 text-accent">{children}</h2>
+                  ),
+                  p: ({ children }) => (
+                    <p className="text-muted-foreground mb-4 leading-relaxed">{children}</p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-outside space-y-2 ml-8 mb-4 text-muted-foreground marker:text-accent">{children}</ul>
+                  ),
+                  li: ({ children }) => (
+                    <li className="text-muted-foreground pl-2">{children}</li>
+                  ),
+                  code: ({ children, className }) => {
+                    const isBlock = className?.includes('language-')
+                    if (isBlock) {
+                      return (
+                        <pre className="bg-card border border-border rounded-lg p-4 mb-4 overflow-x-auto">
+                          <code className="text-accent font-mono text-sm">{children}</code>
+                        </pre>
+                      )
+                    }
+                    return <code className="bg-card px-2 py-1 rounded text-accent font-mono text-sm">{children}</code>
+                  },
+                  pre: ({ children }) => (
+                    <pre className="bg-card border border-border rounded-lg p-4 mb-4 overflow-x-auto">
+                      {children}
+                    </pre>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-bold text-accent">{children}</strong>
+                  ),
+                  img: ({ src, alt }) => (
+                    <img 
+                      src={src} 
+                      alt={alt || ""} 
+                      className="max-w-full h-auto rounded-lg border border-border my-4 mx-auto block"
+                    />
+                  ),
+                }}
+              >
+                {blog.content}
+              </ReactMarkdown>
+            </div>
           </div>
 
           {/* Footer */}
