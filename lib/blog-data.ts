@@ -55,7 +55,7 @@ Docker is essential for modern application development and deployment.`,
     title: "Kubernetes for DevOps",
     excerpt:
       "Explore Kubernetes concepts including deployments, services, and ingress for orchestrating containerized applications.",
-    date: "Mar 10, 2025",
+    date: "May 20, 2025",
     readTime: "12 min read",
     category: "Orchestration",
     content: `Kubernetes has become the standard for container orchestration in modern enterprises.
@@ -92,7 +92,7 @@ Kubernetes might seem complex initially, but it's worth the learning curve.`,
     title: "Terraform Infrastructure as Code",
     excerpt:
       "Learn how to manage your AWS infrastructure using Terraform for reproducible and version-controlled deployments.",
-    date: "Mar 1, 2025",
+    date: "Jun 25, 2025",
     readTime: "10 min read",
     category: "Infrastructure",
     content: `Infrastructure as Code (IaC) is a best practice for managing cloud resources.
@@ -137,7 +137,7 @@ Terraform makes infrastructure management predictable and scalable.`,
     title: "Automating Node.js Deployment with Nginx and Ansible Roles on AWS",
     excerpt:
       "Learn how to automate Node.js application deployment on AWS EC2 using Ansible Roles, Nginx reverse proxy, and AWS Dynamic Inventory.",
-    date: "Mar 25, 2025",
+    date: "Aug 10, 2025",
     readTime: "15 min read",
     category: "Automation",
     content: `In the world of DevOps, consistency is king. Manually configuring servers, installing dependencies, and setting up reverse proxies is not only tedious but prone to human error. This is where Ansible shines.
@@ -311,7 +311,7 @@ Happy Automating!`,
     slug: "serverless-rest-api-dynamodb-direct-integration",
     title: "Building a Serverless REST API: Direct Integration Between AWS API Gateway and DynamoDB",
     excerpt: "Learn how to build a serverless REST API without Lambda functions by directly integrating AWS API Gateway with DynamoDB for better performance and lower costs.",
-    date: "Nov 15, 2025",
+    date: "Oct 5, 2025",
     readTime: "12 min read",
     category: "AWS",
     content: `I'll be honest with you - I used to be that developer who'd slap a Lambda function between everything. API Gateway talking to DynamoDB? Better add a Lambda! Need to format some data? Lambda time! But then I discovered something that completely changed how I think about serverless architecture.
@@ -538,5 +538,156 @@ If you're feeling ambitious, try adding:
 The beauty of this pattern is its simplicity. Sometimes the best solution is the one that does less, not more.
 
 Happy building! 🚀`,
+  },
+  {
+    id: 5,
+    slug: "fine-tuning-ai-video-marketing-scripts",
+    title: "How I Fine-Tuned a Bedrock Model for AI-Powered Video Marketing Scripts",
+    excerpt: "Learn how I fine-tuned a Bedrock model to generate high-conversion marketing scripts with structured outputs, consistent brand voice, and platform-specific CTAs.",
+    date: "Nov 2, 2025",
+    readTime: "10 min read",
+    category: "AI/ML",
+    content: `## Overview: The Project Context
+
+While working on a Generative AI-powered video marketing platform, I faced a common challenge:
+
+**Generic AI models are good at writing text, but they don't consistently write in the style marketers need.**
+
+The platform was designed to transform simple text prompts into short, engaging marketing videos. To do this effectively, the system had to produce:
+
+- High-conversion marketing scripts
+- Scene-by-scene storyboards  
+- Platform-specific CTAs (Instagram, TikTok, YouTube Shorts)
+- Consistent brand and marketing tone
+
+Prompt engineering and Retrieval-Augmented Generation (RAG) alone were not sufficient to enforce style, structure, and persuasion patterns at scale. This led me to fine-tune a Bedrock model specifically for marketing script generation.
+
+## Why Fine-Tuning Matters
+
+**Fine-tuning is all about teaching a model how to say something, rather than what to say.**
+
+For marketing scripts, outputs must:
+
+- Follow a structured **[Hook][Scene][CTA]** format
+- Maintain a consistent brand voice
+- Optimize for engagement and conversion
+- Avoid mistakes or unsafe claims
+
+Without fine-tuning, even the best LLMs can produce inconsistent, off-brand, or unstructured scripts.
+
+## Step 1: Define Fine-Tuning Objectives
+
+Before starting, I defined what the model needed to do:
+
+- **Style & tone consistency**: energetic, persuasive, brand-aligned
+- **Structured outputs**: [Hook][Scene][CTA]
+- **Platform awareness**: Instagram, TikTok, YouTube
+- **Conversion focus**: natural CTAs, engaging hooks
+- **Safety & compliance**: prevent factual mistakes or misleading claims
+
+## Step 2: Prepare the Dataset
+
+I created a JSONL dataset with prompt-completion pairs. Each entry follows the structure:
+
+\`\`\`json
+{
+  "schemaVersion": "bedrock-conversation-2024", 
+  "system": [
+    {
+      "text": "You are a creative marketing assistant specializing in short ads"
+    }
+  ], 
+  "messages": [
+    {
+      "role": "user", 
+      "content": [
+        {
+          "text": "Write a 20-second TikTok ad for a coffee subscription"
+        }
+      ]
+    }, 
+    {
+      "role": "assistant", 
+      "content": [
+        {
+          "text": "[Hook] Fresh coffee delivered weekly!\\n[Scene 1] Subscription box arrives at the door\\n[CTA] Subscribe today and get your first box free!"
+        }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+**Dataset highlights:**
+- ~100 high-quality examples
+- Multiple platforms and campaign types (fitness, productivity, coffee, travel, meditation, coding)
+- Varying ad lengths (15–60 seconds)
+- Structured [Hook][Scene][CTA] format
+
+This dataset was critical: **quality > quantity**. I focused on brand-approved, high-performing marketing scripts.
+
+## Step 3: Upload Datasets to S3
+
+Upload your training and validation datasets to an S3 bucket that Bedrock can access.
+
+![S3 Dataset Upload](/s3.png)
+
+## Step 4: Create IAM Role for Bedrock
+
+1. Go to **IAM → Roles → Create Role**
+2. Select **Bedrock** as trusted entity
+3. Attach a policy like this (replace bucket names):
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject", 
+        "s3:ListBucket", 
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::motionmuse-dataset", 
+        "arn:aws:s3:::motionmuse-dataset/*"
+      ]
+    }
+  ]
+}
+\`\`\`
+
+## Step 5: Create Fine-Tuning Job in Bedrock
+
+1. Navigate to **Amazon Bedrock Console → Tune → Custom Models → Create Fine-tuning Job**
+2. Select **Nova Micro** as the base model
+3. **Configure Input Data:**
+   - Training file: \`s3://motionmuse-dataset/motionmuse_finetune_100.jsonl\`
+   - Validation file: \`s3://motionmuse-finetune-data/motionmuse_validation_20.jsonl\`
+4. **Output Data Location:**
+   - Example: \`s3://motionmuse-dataset/output/\`
+5. **Hyperparameters (example for Nova Micro):**
+   - epochCount: 3
+   - batchSize: 8
+   - learningRate: 3e-5
+6. Assign the IAM role you created in Step 4
+7. Click **Create Job**. Bedrock will start fine-tuning.
+![S3 Dataset Upload](/s3.png)
+![Fine-Tuning Job Creation](/model.png)
+
+## Step 6: Test Your Fine-Tuned Model
+
+1. Once the job is complete, your fine-tuned model appears under **Custom Models**
+2. **Test it via On-Demand Inference:**
+   - Open **Playground → Select Custom Model**
+   - Enter a prompt, e.g.: "Generate a 30-second TikTok ad for a productivity app"
+   - Validate the responses match the tone, style, and structure you expect
+![Test Model](/testmodel.png)
+## Final Thoughts
+
+Fine-tuning isn't about making the model smarter; it's about making it more disciplined. By moving the "instructions" from the prompt into the model's actual weights, I reduced my latency, lowered my token costs (shorter prompts!), and—most importantly—got scripts that actually sound like a human wrote them.
+
+**The key takeaway**: When generic AI isn't enough, fine-tuning can bridge the gap between general capability and domain expertise.`,
   },
 ]
